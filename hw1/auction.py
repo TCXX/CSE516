@@ -12,7 +12,7 @@ from datetime import datetime
 
 number_regex = re.compile(r"\d+")
 INF = 100000000
-verbose = False
+verbose = True
 
 N = 256 #number of agents
 M = 10000000 #max value
@@ -178,20 +178,21 @@ if __name__ == "__main__":
     if len(sys.argv) < 2:
         for i in range(0, trial):
             C = generateRandomArray(N, M)
-            solveAuction(C)
+            solveAuction(C) 
+            #time for solving multiple trials
+        endTime = datetime.now()
+        usedTime = endTime - startTime
+        print(str(trial) +" trials, " + str(N) + " agents of max " 
+            + str(M) + " in " 
+            + str(usedTime))
     else:
         C = readFile(sys.argv[1])
     
-        # Print the last instance
-        if (verbose):
-            printArray(C)
+        # Print the instance
+        printArray(C)
+        solveAuction(C)
     
-    #time for solving multiple trials
-    endTime = datetime.now()
-    usedTime = endTime - startTime
-    print(str(trial) +" trials, " + str(N) + " agents of max " 
-        + str(M) + " in " 
-        + str(usedTime))
+
     
     
     
