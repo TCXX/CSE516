@@ -19,9 +19,9 @@ number_regex = re.compile(r"\d+")
 INF = 100000000
 verbose = False
 
-N = 256 #number of agents
+N = 2 #number of agents
 M = 100 #max value
-trial = 100 #number of trials
+trial = 1000 #number of trials
 
 # Parse data from given file
 def readFile(inputFile):
@@ -77,9 +77,11 @@ def printArray(C):
 def printSolution(a, C):
     objValue = 0
     for i in range(0, len(a)):
-        print ("%d matches %d" %(i, a[i]))
+        if (verbose):
+            print ("%d matches %d" %(a[i], i))
         objValue += C[a[i]][i]
     print("Object Value: %d" %objValue)
+    return objValue
 
 #For given scale and preferences values, find optimal matches  
 def solveAuction(C):
@@ -165,8 +167,7 @@ def solveAuction(C):
                     ifHasUnassign = True
         epsilon *= 0.25
     
-    if (verbose):
-        printSolution(assignments, C)
+    objValue = printSolution(assignments, C)
     
     #time for solving one single trial
     endTime = datetime.now()
@@ -174,6 +175,8 @@ def solveAuction(C):
     print(str(nIter) + " iterations, " 
         + str(n) +" agents in " 
         + str(usedTime))
+    
+    return objValue
    
 def solveLinear(C): 
     #begin timing 
@@ -234,6 +237,8 @@ def solveLinear(C):
     usedTime = endTime - startTime
     print(str(n) +" agents in " 
         + str(usedTime))
+        
+    return prob.objective
 
 # Main
 if __name__ == "__main__":
@@ -241,15 +246,22 @@ if __name__ == "__main__":
     
     # Randomize instances if no arguments for input file
     if len(sys.argv) < 2:
+        sum = 0.0
+        maxObjValue = 0
         for i in range(0, trial):
             C = generateRandomArray(N, M)
-            solveLinear(C) 
-            #time for solving multiple trials
+            objValue = solveAuction(C)
+            sum += objValue
+            if (objValue > maxObjValue):
+                maxObjValue = objValue
+        #time for solving multiple trials
         endTime = datetime.now()
         usedTime = endTime - startTime
-        print(str(trial) +" trials, " + str(N) + " agents of max " 
-            + str(M) + " in " 
-            + str(usedTime))
+        
+        average = sum/(N*trial)
+
+        print(str(trial) +" trials, " + str(N) + " agents of M " + str(M) + " in " + str(usedTime))
+        print("max objective: " + str(maxObjValue) + "; average per agent: " + str(average))
     else:
         C = readFile(sys.argv[1])
     
