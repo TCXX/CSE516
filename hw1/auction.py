@@ -4,19 +4,24 @@ Created on Fri Feb 10 22:29:06 2017
 
 @author: XIN
 
-Referenced github.com/EvanOman/AuctionAlgorithmCPP
+References
+github.com/EvanOman/AuctionAlgorithmCPP
+github.com/coin-or/pulp/tree/master/examples
 """
 
-import sys , re #regular expression
+import sys , re # regular expression
+#import lex, yacc, pulp # linear programming
 from datetime import datetime
+
+from pulp import *
 
 number_regex = re.compile(r"\d+")
 INF = 100000000
-verbose = True
+verbose = False
 
 N = 256 #number of agents
-M = 10000000 #max value
-trial = 1000 #number of trials
+M = 100 #max value
+trial = 100 #number of trials
 
 # Parse data from given file
 def readFile(inputFile):
@@ -169,7 +174,67 @@ def solveAuction(C):
     print(str(nIter) + " iterations, " 
         + str(n) +" agents in " 
         + str(usedTime))
+   
+def solveLinear(C): 
+    #begin timing 
+    startTime = datetime.now()    
     
+    if (len(C) == 0):
+        sys.exit("Error: Empty list of preferences. ")
+    
+    n = len(C[0])
+    
+    # A list of strings from "1" to "9" is created
+    Sequence = []
+    for i in range (0, n):
+        Sequence.append(i)
+    
+    # The Vals, Rows and Cols sequences all follow this form
+    Rows = Sequence
+    Cols = Sequence
+    
+    # The prob variable is created to contain the problem data        
+    prob = LpProblem("Matching Problem",LpMaximize)
+    
+    # The problem variables are created
+    choices = LpVariable.dicts("Choice",(Rows,Cols),0,1,LpInteger)
+    
+    # The objective function is added
+    prob += lpSum([[C[i][j]*choices[i][j] for j in range(n)] for i in range(n)])
+    
+    # A constraint ensuring that only one value can be in each square is created
+    
+    for r in Rows:
+        prob += lpSum([choices[r][c] for c in Cols]) == 1,""
+        
+    for c in Cols:
+        prob += lpSum([choices[r][c] for r in Rows]) == 1,""
+    
+    # The problem data is written to an .lp file
+    prob.writeLP("Sudoku.lp")
+    
+    # The problem is solved using PuLP's choice of Solver
+    prob.solve()
+    
+    if (verbose):
+        # The status of the solution is printed to the screen
+        print("Status:", LpStatus[prob.status])
+        
+        # The solution is written to the sudokuout.txt file 
+        for r in Rows:
+            for c in Cols:
+                if value(choices[r][c]) > 0:
+                        print(str(r) + " matches " +str(c))
+        
+        # Print the value of the objective
+        print("objective= ", value(prob.objective)) 
+    
+    #time for solving one single trial
+    endTime = datetime.now()
+    usedTime = endTime - startTime
+    print(str(n) +" agents in " 
+        + str(usedTime))
+
 # Main
 if __name__ == "__main__":
     startTime = datetime.now()   
@@ -178,7 +243,7 @@ if __name__ == "__main__":
     if len(sys.argv) < 2:
         for i in range(0, trial):
             C = generateRandomArray(N, M)
-            solveAuction(C) 
+            solveLinear(C) 
             #time for solving multiple trials
         endTime = datetime.now()
         usedTime = endTime - startTime
