@@ -27,6 +27,7 @@ def readFile(inputFile):
                 if number is not None:
                     for i in range(0, int(line)):
                         votes.append(0)
+                    continue
             
             #validate format
             valid = valid_regex.match(line)
@@ -34,10 +35,13 @@ def readFile(inputFile):
                 #extract characters
                 matches = number_regex.findall(line)
                 time = int(matches[0])
-                for i in range(1, len(matches)):
-                    can = int(matches[i])
-                    if can <= len(votes):
-                        votes[can-1] += time
+                #for i in range(1, len(matches)):
+                    #can = int(matches[i])
+                    #if can <= len(votes):
+                        #votes[can-1] += time
+                can = int(matches[1])
+                if can <= len(votes):
+                        votes[can-1] += 1
         return votes
     except IOError:
         sys.exit("IOE Error: Fail to open %s !" % inputFile)
