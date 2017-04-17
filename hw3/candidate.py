@@ -5,21 +5,24 @@ Created on Mon Apr 17 09:16:07 2017
 
 @author: XIN
 """
-
+import sys
 import re #regular expression
 
-#To read and parse an input file concerning game data.
-def count(inputFile):
-    #player data    
-    plural = []
-    borda = []
-    approval = []
-    
-    #matching rules
-    valid_regex = re.compile(r"[[0-9,. \t]+$")
-    number_regex = re.compile(r"\d+")
-    numberEnd_regex = re.compile(r"\d+$")
-    
+inputFile = 'ED-00016-00000001.txt'
+
+plural = []
+borda = []
+approval = []
+
+runoff = []
+eliminated = []
+
+#matching rules
+valid_regex = re.compile(r"[[0-9,. \t]+$")
+number_regex = re.compile(r"\d+")
+numberEnd_regex = re.compile(r"\d+$")
+
+def count(): 
     try:
         file = open(inputFile, 'r')
         for line in file:
@@ -35,7 +38,6 @@ def count(inputFile):
             valid = valid_regex.match(line)
             if valid is not None:
                 matches = number_regex.findall(line)
-                #time = int(matches[0])
                 
                 #validate preference range
                 isValid = True
@@ -44,19 +46,21 @@ def count(inputFile):
                     if can > len(borda):
                         isValid = False
                 if isValid:
+                    time = int(matches[0])
+                    
                     #plural
                     can = int(matches[1])
-                    plural[can-1] += 1
+                    plural[can-1] += time
     
                     #borda
                     for i in range(1, len(matches)):
                         can = int(matches[i])
-                        borda[can-1] += len(borda)-i
+                        borda[can-1] += (len(borda)-i)*time
                         
                     #approval
                     for i in range(1, len(matches)):
                         can = int(matches[i])
-                        approval[can-1] += 1
+                        approval[can-1] += time
         print("Plurality vote: %s " % plural)
         print("Borda count: %s " % borda)
         print("Approval vote: %s " % approval)
@@ -64,11 +68,62 @@ def count(inputFile):
         sys.exit("IOE Error: Fail to open %s !" % inputFile)
     else:
         file.close()
-        #calculate batting average
+
+def eliminate(): 
+
+    try:
+        numOfCan = len(runoff)
+        for i in range(numOfCan):
+            runoff[i] = 0
+        
+        file = open(inputFile, 'r')
+        for line in file:
+            valid = valid_regex.match(line)
+            if valid is not None:
+                matches = number_regex.findall(line)
+                
+                #validate preference range
+                isValid = True
+                for i in range(1, len(matches)):
+                    can = int(matches[i])
+                    if can > len(borda):
+                        isValid = False
+                if isValid:
+                    time = int(matches[0])
+                    
+                    #runoff
+                    score = numOfCan
+                    for i in range(1, len(matches)):
+                        can = int(matches[i])
+                        if eliminated[can-1] == False:
+                            score -= 1
+                            runoff[can-1] += score*time
+        index = 0
+        minValue = 99999
+        for i in range(len(runoff)):
+            if runoff[i] < minValue and eliminated[i] == False:
+                index = i
+                minValue = runoff[i]
+                
+        eliminated[index] = True
+        print("Run: %s " % runoff)
+        print("Off: %s " % eliminated)
+        print("Loser: %s" % index)
+    except IOError:
+        sys.exit("IOE Error: Fail to open %s !" % inputFile)
+    else:
+        file.close()
 
 #main        
 if __name__ == "__main__":
+
+    count()
     
-    inputFile = 'ED-00016-00000001.txt'
-    
-    count(inputFile)
+    for i in range(len(plural)):
+        runoff.append(0)
+        eliminated.append(False)
+    for i in range(len(runoff)-1):
+        eliminate()
+    for i in range(len(eliminated)):
+        if eliminated[i] == False:
+            print("Winner: %s" % i)
