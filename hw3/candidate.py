@@ -90,14 +90,17 @@ def eliminate():
                         isValid = False
                 if isValid:
                     time = int(matches[0])
-                    
+                    hasCount = False
                     #runoff
-                    score = numOfCan
+                    #score = numOfCan
                     for i in range(1, len(matches)):
                         can = int(matches[i])
-                        if eliminated[can-1] == False:
-                            score -= 1
-                            runoff[can-1] += score*time
+                        if not eliminated[can-1] and not hasCount:
+                            #score -= 1
+                            #runoff[can-1] += score*time
+                            runoff[can-1] += time
+                            hasCount = True
+                            
         index = 0
         minValue = 99999
         for i in range(len(runoff)):
@@ -122,7 +125,7 @@ if __name__ == "__main__":
     for i in range(len(plural)):
         runoff.append(0)
         eliminated.append(False)
-    for i in range(len(runoff)-1):
+    for i in range(len(runoff)):
         eliminate()
     for i in range(len(eliminated)):
         if eliminated[i] == False:
